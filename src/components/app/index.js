@@ -1,3 +1,3 @@
-import App from './App.js';
+import App from './app';
 
 export default App;
