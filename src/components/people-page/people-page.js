@@ -5,20 +5,43 @@ import PersonDetails from '../person-details/person-details';
 import ErrorIndicator from '../error-indicator/error-indicator';
 import SwapiService from "../../services/swapi-service";
 
-export default class PeoplePage extends Component {
+const Row = ({ leftEl, rightEl }) => {
+  return (
+    <div className="row mb2">
+      <div className="col-md-6">
+        { leftEl }
+      </div>
+      <div className="col-md-6">
+        { rightEl }
+      </div>
+    </div>
+  )
+}
 
-  swapiService = new SwapiService();
-
+class ErrorBoundary extends Component {
   state = {
-    selectedPerson: 3,
     hasError: false
   };
-
   componentDidCatch(error, info) {
     this.setState({
       hasError: true
     });
   }
+  render() {
+    if (this.state.hasError) {
+      return <ErrorIndicator />;
+    }
+    return this.props.children;
+  }
+}
+
+export default class PeoplePage extends Component {
+
+  swapiService = new SwapiService();
+
+  state = {
+    selectedPerson: 3
+  };
 
   onPersonSelected = (selectedPerson) => {
     this.setState({ selectedPerson });
@@ -26,21 +49,25 @@ export default class PeoplePage extends Component {
 
   render() {
 
-    if (this.state.hasError) {
-      return <ErrorIndicator />;
-    }
+    const itemList = (
+      <ItemList 
+          onItemSelected={this.onPersonSelected}
+          getData={this.swapiService.getAllPeople}>
+          {
+            (i) => `${i.name} (${i.gender}, ${i.birthYear})`
+          }
+      </ItemList>
+    );
+    const personDetails = (
+      <PersonDetails personId={this.state.selectedPerson} />
+    )
+
+    
 
     return (
-      <div className="row mb2">
-        <div className="col-md-6">
-          <ItemList onItemSelected={this.onPersonSelected} 
-            getData={this.swapiService.getAllPeople}
-          />
-        </div>
-        <div className="col-md-6">
-          <PersonDetails personId={this.state.selectedPerson} />
-        </div>
-      </div>
+      <ErrorBoundary>
+        <Row leftEl={itemList} rightEl={personDetails} />
+      </ErrorBoundary>
     );
   }
 }
